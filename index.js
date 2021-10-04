@@ -38,8 +38,7 @@ async function start() {
   let randoGuess = randomNum();
   // console.log(randoGuess);
 
-   // Story 2: Let the computer win -->The computer wins when user responds "yes"
-
+  // Story 2: Let the computer win -->The computer wins when user responds "yes"
 
   // Story 3: Computer guesses wrong
 
@@ -49,7 +48,15 @@ async function start() {
   // STORY 4: Modify your guess range
 
   //If the user says the guess is incorrect, then the computer asks if user's number is "higher" or "lower"
-  if (response.toLowerCase() !== "yes") {
+  while (response.toLowerCase() !== "yes") {
+    /* I am attempting to sanitize this input to make sure user only is able to move 
+    forward if they respond "yes" or "no", But I can't figure out how to 
+    write the logic in such a way that they're able to move forward 
+    after being prompted to try again. code attempt here:
+    (response.toLowerCase() !== "yes" && response.toLowerCase() !== "no"){
+      await ask(`Oops! Looks like you didn't enter "yes" or "no".\nPlease try again. Is your number ${randoGuess}\nEnter Yes or No>_`);
+    }
+    */
     response = await ask(
       `Is your number "higher" or "lower" than ${randoGuess}?>_`
     );

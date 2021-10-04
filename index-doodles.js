@@ -43,7 +43,7 @@ async function start() {
   // Story 3: Computer guesses wrong
   // computer asks if randomly generated number matches user's number. Computer stores answer in variable: "response"
   let response = await ask(`Is your number ${randoGuess}\nEnter "yes" or "no">_`);
-  if (response.lowerCase() === "no") {
+  while (response.lowerCase() === "no") {
     response = await ask(`Is your number ${randoGuess}\nEnter "yes" or "no">_`);
   }
 
