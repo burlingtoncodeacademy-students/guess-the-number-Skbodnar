@@ -79,8 +79,12 @@ async function start() {
     /* Current code only loops through this once. I can't figure out how to keep looping until it guesses correctly */
     while (newGuess.toLowerCase() === "higher") {
       newGuess = await ask(
-        `Is your number "higher" or "lower" than ${hiRange}?>_`
+        `Is your number "higher" or "lower" or "equal" to ${hiRange}?>_`
       );
+      if (newGuess.toLowerCase() === "equal") {
+        console.log("Fantastic! Let's play again sometime!");
+        process.exit();
+      }
     }
     if (newGuess.toLowerCase() === "yes") {
       console.log("Fantastic! Let's play again sometime!");
@@ -102,13 +106,15 @@ async function start() {
     /*I want the while loop below to work in such a way that while user's guess is lower, the
     computer will generate a new number with a lower range. However, same issue as hiRange not looping. As code is written now
     it will stop generating new numbers once it fulfills this check, which it does right after
-    user selects "lower". 
+    user selects "lower". Maybe instead I should create a loop that states: While secretNumber !=== newGuess,
+    ask if number is higher or lower. While secretNumber > newGuess  computer modifies guess in high range.
+    While secretNumber < newGuess  computer modifies guess in low range
     */
     while (newGuess.toLowerCase() === "lower") {
       newGuess = await ask(
-        `Is your number "higher" or "lower" than ${loRange}?>_`
+        `Is your number "higher" or "lower" or "equal" to ${loRange}?>_`
       );
-      if (newGuess.toLowerCase() === "yes") {
+      if (newGuess.toLowerCase() === "equal") {
         console.log("Fantastic! Let's play again sometime!");
         process.exit();
       }
