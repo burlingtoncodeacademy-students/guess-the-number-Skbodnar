@@ -16,7 +16,8 @@ async function start() {
   let secretNumber = await ask(
     "What is your secret number?\nI won't peek, I promise...\n"
   );
-  while (isNaN(secretNumber)) { //Sanitize -- making sure user is submitting an actual number
+  while (isNaN(secretNumber)) {
+    //Sanitize -- making sure user is submitting an actual number
     secretNumber = await ask(
       "Oops! Looks like you didn't enter a number. Please try again :) "
     );
@@ -36,6 +37,11 @@ async function start() {
 
   let randoGuess = randomNum();
   // console.log(randoGuess);
+
+   // Story 2: Let the computer win -->The computer wins when user responds "yes"
+
+
+  // Story 3: Computer guesses wrong
 
   // computer asks if randomly generated number matches user's number. Computer stores answer in variable: "response"
   let response = await ask(`Is your number ${randoGuess}\nEnter Yes or No>_`);
@@ -101,8 +107,9 @@ async function start() {
       }
     }
   }
+  // When user submits "yes" computer responds with message
   if (response.toLowerCase() === "yes") {
-    console.log("Great!");
+    console.log("Great! I hope you play again sometime!");
     process.exit();
   }
 
@@ -127,5 +134,4 @@ async function start() {
   // 4.Depending on the above, the computer informs the user of modifications that might be necessary for their next guess
   // 5.User is asked to modify their guess until they guess the computer's number correctly
   // 6.When the user guesses correctly, the computer offers a congratulatory message and exits the program.
-
 }
