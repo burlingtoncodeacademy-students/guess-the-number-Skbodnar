@@ -1,3 +1,4 @@
+//-------------------------------Setup for Async Function
 const readline = require("readline");
 const rl = readline.createInterface(process.stdin, process.stdout);
 
@@ -7,144 +8,230 @@ function ask(questionText) {
   });
 }
 
-start();
+//call function to start the game
+guessTheNumber();
 
-async function start() {
-  console.log(
-    "Let's play a game where you (human) make up a number and I (computer) try to guess it."
+async function guessTheNumber() {
+  //--------------------------------IceBox: The user determines which version of the game is played
+  //Ask user if they want to play V1: Computer guesses the number or if they want to play V2: Human guesses the number
+  let gameChoice = await ask(
+    `\nLet's play a guess-the-number game. First you have to pick which game you want to play:\nIf you (human) want to think of a number and have me (computer) guess, type: v1. If you want me (computer) to pick a number and have you (human) guess, type: v2>_`
   );
-  let secretNumber = await ask(
-    "What is your secret number?\nI won't peek, I promise...\n"
-  );
-  while (isNaN(secretNumber)) {
-    //Sanitize -- making sure user is submitting an actual number
-    secretNumber = await ask(
-      "Oops! Looks like you didn't enter a number. Please try again :) "
+  //--------------------------------if user types something else that's not v1 or v2
+  while (
+    gameChoice.toLowerCase() !== "v1" &&
+    gameChoice.toLowerCase() !== "v2"
+  ) {
+    //User receives message that computer can't understand user's input and recommends they try again
+    gameChoice = await ask(
+      `I'm sorry, I don't know ${gameChoice}. Please try again.>_`
     );
   }
 
-  // STORY ONE: Pick a number any number
+  //--------------------------------if the user wants to play the 1st version of the game
+  if (gameChoice.toLowerCase() === "v1") {
+    //run game with startV1() function
+    startV1();
+  }
+  //--------------------------------if the user wants to play the 2nd version of the game
+  else if (gameChoice.toLowerCase() === "v2") {
+    //run game with startV2 function
+    startV2();
+  }
+}
 
-  // utilize randomNum function
+//--------------------------------Game V1 (computer guesses number)
+
+async function startV1() {
+  //--------------------------------FUNCTION: random number generator
   function randomNum() {
-    let min = 1;
-    let max = 100;
-
-    let range = max - min + 1;
-    return Math.floor(Math.random() * range) + 1;
+    let min = 1; //min is hardcoded at start
+    let max = userMax; //userMax is determined by user
+    let range = max - min + 1; //determines the range for the equation
+    return Math.floor(Math.random() * range) + 1; //returns a randomly generated whole number within set range
   }
-  // console.log(randomNum(1, 100));
+  //--------------------------------FUNCTION: updates guess within a dynamically set range
+  function updateGuess(min, max) {
+    return Math.floor((max - min) / 2) + min;
+  }
+  //--------------------------------STORY: Pick a number, any number
 
-  let randoGuess = randomNum();
-  // console.log(randoGuess);
+  //Create variable to store max number set by user
+  let userMax = await ask(
+    `\n In this game, you (human) will think of a number and have me (computer) guess.\nFirst, What is the maximum number you want to guess?>_`
+  );
+  //Create variable to store min number set by default
+  let userMin = 1;
 
-  // Story 2: Let the computer win -->The computer wins when user responds "yes"
-
-  // Story 3: Computer guesses wrong
-
-  // computer asks if randomly generated number matches user's number. Computer stores answer in variable: "response"
-  let response = await ask(`Is your number ${randoGuess}\nEnter Yes or No>_`);
-
-  // STORY 4: Modify your guess range
-
-  //If the user says the guess is incorrect, then the computer asks if user's number is "higher" or "lower"
-  while (response.toLowerCase() !== "yes") {
-    /* I am attempting to sanitize this input to make sure user only is able to move 
-    forward if they respond "yes" or "no", But I can't figure out how to 
-    write the logic in such a way that they're able to move forward 
-    after being prompted to try again. code attempt here:
-    (response.toLowerCase() !== "yes" && response.toLowerCase() !== "no"){
-      await ask(`Oops! Looks like you didn't enter "yes" or "no".\nPlease try again. Is your number ${randoGuess}\nEnter Yes or No>_`);
-    }
-    */
-    response = await ask(
-      `Is your number "higher" or "lower" than ${randoGuess}?>_`
+  //Sanitize -- making sure user is submitting an actual number
+  while (isNaN(userMax)) {
+    userMax = await ask(
+      "Oops! Looks like you didn't enter a number. Please try again :)>_ "
     );
+  }
 
-    let newGuess = response; //assigning new variable to keep track of where I am in the code
+  //Create variable to store user's secret number
+  let secretNumber = await ask(
+    `Great choice! It looks like you will be picking a number between 1 and ${userMax}.\n Now, it is time to submit your secret number. What is it?\nI won't peek, I promise...\n`
+  );
+  //Sanitize -- making sure user is submitting an actual number
+  while (isNaN(secretNumber)) {
+    secretNumber = await ask(
+      "Oops! Looks like you didn't enter a number. Please try again :)>_"
+    );
+  }
 
-    // function if user's "secretNumber" is higher than the computer's guess. modHiRange stands for modified high range
-    function modHiRange(min, max) {
-      // assign variables to the new modified range
-      min = randoGuess;
-      max = 100;
+  //-------------------------------STORY: Computer guesses incorrectly
+  //Keep track of number of guesses
+  let guessCount = 1;
+  //Assign variable to randomNum function
+  let randoGuess = randomNum();
+  //Computer asks if randomly generated number matches user's number. Computer stores answer in variable: "response"
+  let response = await ask(
+    `Ok, now it's time for me to start guessing....\nIs your number ${randoGuess}\nEnter Yes or No>_`
+  );
 
-      range = max - min + 1;
-      return Math.floor((max + min) / 2); //use parseInt() to make it a number??
-    }
+  //-------------------------------STORY: Modify your guess range to make smart guesses
 
-    let hiRange = modHiRange(); //create a variable for modHiRange function to use in while loop
-
-    //While user's guess is higher, computer generates a new number within that modified higher range
-    /* Current code only loops through this once. I can't figure out how to keep looping until it guesses correctly */
-    while (newGuess.toLowerCase() === "higher") {
-      newGuess = await ask(
-        `Is your number "higher" or "lower" or "equal" to ${hiRange}?>_`
-      );
-      if (newGuess.toLowerCase() === "equal") {
-        console.log("Fantastic! Let's play again sometime!");
+  //while the user says the guess is incorrect, the computer asks if user's number is "higher" or "lower"
+  while (response.toLowerCase() !== "yes") {
+    //ask if it's higher or lower and store their response in the variable
+    response = await ask(`Is it "higher" or "lower"?`);
+    //assign that user response a more semantic variable
+    let higherOrLower = response;
+    //If user's guess is higher, computer generates a new number within that modified range
+    if (higherOrLower.toLowerCase() === "higher") {
+      //reassigning userMin to randoGuess + 1 for new range
+      userMin = randoGuess + 1;
+      //passing in userMin and userMax to updating function
+      randoGuess = updateGuess(userMin, userMax);
+      //reassigning response to bring us back to start of while loop
+      response = await ask(`Is it ${randoGuess}?>_`);
+      //Cheat Detector: if the max is less than the min (and it shouldn't be), then the user is lying
+      if (userMax < userMin) {
+        console.log(`You are lying!`);
         process.exit();
       }
+      //add one every time computer makes another guess
+      guessCount += 1;
     }
-    if (newGuess.toLowerCase() === "yes") {
-      console.log("Fantastic! Let's play again sometime!");
+    //If user's guess is lower, computer generates a new number within that modified range
+    if (higherOrLower.toLowerCase() === "lower") {
+      //reassigning userMax to randoGuess - 1 for new range
+      userMax = randoGuess - 1;
+      //passing in userMin and userMax to updating function
+      randoGuess = updateGuess(userMin, userMax);
+      //reassigning response to bring us back to start of while loop
+      response = await ask(`Is it ${randoGuess}?_>`);
+      //cheat detector: if min is greater than the max (and it shouldn't be), then the user is lying
+      if (userMin > userMax) {
+        console.log(`You are lying!`);
+        process.exit();
+      }
+      //add one every time computer makes another guess
+      guessCount += 1;
+    }
+  }
+  //-------------------------------STORY: Let the computer win
+  //if user indicates that the computer guessed correctly, they receive a message of V I C T O T Y! along with the number of guesses that were made
+  if (response.toLowerCase() === "yes") {
+    console.log(
+      `V I C T O R Y! I guessed your number after only ${guessCount} guesses!`
+    );
+    //Ask the user if they want to play again
+    let playAgain = await ask(
+      `That was F U N! Do you want to play again? Type "Yes" or "No"?>_`
+    );
+    //If "yes" start the game again
+    if (playAgain.toLowerCase() === "yes") {
+      return guessTheNumber();
+      //If not, exit the program
+    } else {
+      //exits the program
       process.exit();
     }
+  }
+}
 
-    // Create function to use if secretNumber is lower than randoGuess. modLoRange stands for modified low range
-    function modLoRange(min, max) {
-      // reassign variables to min and max
-      min = 1;
-      max = randoGuess;
+//--------------------------------Game V2 (human guesses number)
+//calling reverse game function
+async function startV2() {
+  //--------------------------------FUNCTION: random number generator
+  function randomNum() {
+    let min = 1; //min is hardcoded at start
+    let max = 100; //userMax is hardcoded at start
+    let range = max - min + 1; //determines the range for the equation
+    return Math.floor(Math.random() * range) + 1; //returns a randomly generated whole number within set range
+  }
 
-      range = max - min + 1;
-      return Math.floor((max + min) / 2);
-    }
+  console.log(
+    `\nLet's play a game where I (computer) pick a number between 1 and 100 and you (human) try and guess it`
+  );
 
-    let loRange = modLoRange(); //create a variable for modLoRange function and use in while loop
+  //Assign variable to store computer's secret number
+  let compSecretNum = randomNum();
 
-    /*I want the while loop below to work in such a way that while user's guess is lower, the
-    computer will generate a new number with a lower range. However, same issue as hiRange not looping. As code is written now
-    it will stop generating new numbers once it fulfills this check, which it does right after
-    user selects "lower". Maybe instead I should create a loop that states: While secretNumber !=== newGuess,
-    ask if number is higher or lower. While secretNumber > newGuess  computer modifies guess in high range.
-    While secretNumber < newGuess  computer modifies guess in low range
-    */
-    while (newGuess.toLowerCase() === "lower") {
-      newGuess = await ask(
-        `Is your number "higher" or "lower" or "equal" to ${loRange}?>_`
+  //Keep track of number of guesses
+  let guessCount = 1;
+
+  //Ask user to guess the correct number
+  let userGuess = await ask(
+    `Ok, I am ready for you to make your first guess...>_`
+  );
+  //Sanitize -- making sure user is submitting an actual number
+  while (isNaN(userGuess)) {
+    userGuess = await ask(
+      "Oops! Looks like you didn't enter a number. Please try again :)>_ "
+    );
+  }
+
+  //Turn user's guess into a number (because all user input comes in as a string)
+  let userGuessInt = parseInt(userGuess);
+  console.log(`This is Computer's Secret Number: ${compSecretNum}`); //TESTING WHAT COMPUTER SECRET NUMBER IS
+
+  //While user guess is incorrect
+  while (parseInt(userGuessInt) !== compSecretNum) {
+    //Sanitize -- making sure user is submitting an actual number
+    while (isNaN(userGuessInt)) {
+      userGuessInt = await ask(
+        "Oops! Looks like you didn't enter a number. Please try again :)>_ "
       );
-      if (newGuess.toLowerCase() === "equal") {
-        console.log("Fantastic! Let's play again sometime!");
-        process.exit();
-      }
+    }
+    //And if user's guess is greater than computer's guess
+    if (userGuessInt > compSecretNum) {
+      //tell user to guess again, but higher this time
+      userGuessInt = await ask(
+        `Guess again! I'll give you a hint: my number is lower than ${userGuessInt}>_`
+      );
+      //keep track of how many guesses have been made
+      guessCount += 1;
+      //If user's guess is less than computer's guess
+    } else if (userGuessInt < compSecretNum) {
+      //tell user to guess again, but lower this time
+      userGuessInt = await ask(
+        `Guess again! I'll give you a hint: my number is higher than ${userGuessInt}>_`
+      );
+      //keep track of how many guesses have been made
+      guessCount += 1;
     }
   }
-  // When user submits "yes" computer responds with message
-  if (response.toLowerCase() === "yes") {
-    console.log("Great! I hope you play again sometime!");
-    process.exit();
+  //if user's guess is correct
+  if (parseInt(userGuessInt) === compSecretNum) {
+    //send a congratulatory message and info about how many guesses it took
+    console.log(
+      `C O N G R A T U L A T I O N S! You guessed my number after only ${guessCount} guesses!`
+    );
+    //Ask the user if they want to play again
+    let playAgain = await ask(
+      `That was F U N! Do you want to play again? Type "Yes" or "No"?>_`
+    );
+    //If "yes" start the game again
+    if (playAgain.toLowerCase() === "yes") {
+      return guessTheNumber();
+      //If not, exit the program
+    } else {
+      //exits the program
+      process.exit();
+    }
   }
-
-  // Story 5: Make it Smarter
-  /* Use equation--> math.floor((min + max)/2)
-
-
-  // Story 6: Extend the Guess Range (User sets the high range so it could be any number greater than 1).
-  /* Does that mean that user sets the max? 
-  and if so would I set max as follows?:
-  let max === secretNumber
-  let min === 1 
-  */
-
-  // Story 7: Cheat Detector
-  /* */
-
-  // Story 8: Reverse the Game (working through the logic)
-  // 1.computer generates a random number (using randomNum function and hides that from user)
-  // 2.computer asks user to submit a number-guess and stores that variable
-  // 3.computer checks to see if the user's number-guess is higher, lower, or equal to the computer's number
-  // 4.Depending on the above, the computer informs the user of modifications that might be necessary for their next guess
-  // 5.User is asked to modify their guess until they guess the computer's number correctly
-  // 6.When the user guesses correctly, the computer offers a congratulatory message and exits the program.
 }
